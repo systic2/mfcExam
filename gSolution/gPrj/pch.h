@@ -6,6 +6,8 @@
 
 #ifndef PCH_H
 #define PCH_H
+#define COLOR_RED	RGB(0xff, 0x00, 0x00)
+#define COLOR_GREEN	RGB(0x00, 0xff, 0x00)
 
 // 여기에 미리 컴파일하려는 헤더 추가
 #include "framework.h"
