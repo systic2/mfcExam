@@ -287,10 +287,10 @@ void CgPrjDlg::OnBnClickedBtnGetData()
 }
 
 #include <thread>
-void threadProcess(CWnd* pParent, CRect rect)
+void threadProcess(CWnd* pParent, CRect rect, int* nRet)
 {
 	CgPrjDlg* pWnd = (CgPrjDlg*)pParent;
-	pWnd->processImg(rect);
+	*nRet = pWnd->processImg(rect);
 }
 
 void CgPrjDlg::OnBnClickedBtnThread()
@@ -300,24 +300,49 @@ void CgPrjDlg::OnBnClickedBtnThread()
 	int nImgSize = 4096 * 4;
 	CRect rect(0, 0, nImgSize, nImgSize);
 	CRect rt[4];
+	int nRet[4] = { 0, 0, 0, 0 };
 	for (int k = 0; k < 4; k++) {
 		rt[k] = rect;
 		rt[k].OffsetRect(nImgSize * (k % 2), nImgSize * int(k / 2));
 	}
 
-	thread _thread0(threadProcess, this, rt[0]);
+	thread _thread0(threadProcess, this, rt[0], &nRet[0]);
+	thread _thread1(threadProcess, this, rt[1], &nRet[1]);
+	thread _thread2(threadProcess, this, rt[2], &nRet[2]);
+	thread _thread3(threadProcess, this, rt[3], &nRet[3]);
+
 	_thread0.join();
+	_thread1.join();
+	_thread2.join();
+	_thread3.join();
+
+	/*_thread0.detach();
+	_thread1.detach();
+	_thread2.detach();
+	_thread3.detach();*/
+
+	int nSum = 0;
+	for (int i = 0; i < 4; i++) {
+		nSum += nRet[i];
+	}
+
 
 	auto end = system_clock::now();
 	auto millisec = duration_cast<milliseconds>(end - start);
-	cout << millisec.count() << endl;
+	cout << "main::" << nSum << "\t" << millisec.count() * 0.001 << "sec" << endl;
 }
 
 int CgPrjDlg::processImg(CRect rect)
 {
+	auto start = system_clock::now();
+
 	CProcess process;
 
 	int nRet = process.getStarInfo(&m_pDlgImage->m_Image, 0, rect);
+
+	auto end = system_clock::now();
+	auto millisec = duration_cast<milliseconds>(end - start);
+	cout << "thread:" << nRet << "\t" << millisec.count() * 0.001 << "sec" << endl;
 
 	return nRet;
 }
