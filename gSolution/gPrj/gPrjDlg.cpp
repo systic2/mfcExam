@@ -74,6 +74,7 @@ BEGIN_MESSAGE_MAP(CgPrjDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_PROCESS, &CgPrjDlg::OnBnClickedBtnProcess)
 	ON_BN_CLICKED(IDC_BTN_MAKE_PATTERN, &CgPrjDlg::OnBnClickedBtnMakePattern)
 	ON_BN_CLICKED(IDC_BTN_GET_DATA, &CgPrjDlg::OnBnClickedBtnGetData)
+	ON_BN_CLICKED(IDC_BTN_THREAD, &CgPrjDlg::OnBnClickedBtnThread)
 END_MESSAGE_MAP()
 
 
@@ -221,6 +222,10 @@ void CgPrjDlg::OnBnClickedBtnTest()
 
 #include "CProcess.h"
 #include <chrono>
+
+using namespace std;
+using namespace chrono;
+
 void CgPrjDlg::OnBnClickedBtnProcess()
 {
 	CProcess process;
@@ -279,4 +284,40 @@ void CgPrjDlg::OnBnClickedBtnGetData()
 	double dCenterY = (double)nSumY / nCount;
 
 	cout << dCenterX << "\t" << dCenterY << endl;
+}
+
+#include <thread>
+void threadProcess(CWnd* pParent, CRect rect)
+{
+	CgPrjDlg* pWnd = (CgPrjDlg*)pParent;
+	pWnd->processImg(rect);
+}
+
+void CgPrjDlg::OnBnClickedBtnThread()
+{
+	auto start = system_clock::now();
+
+	int nImgSize = 4096 * 4;
+	CRect rect(0, 0, nImgSize, nImgSize);
+	CRect rt[4];
+	for (int k = 0; k < 4; k++) {
+		rt[k] = rect;
+		rt[k].OffsetRect(nImgSize * (k % 2), nImgSize * int(k / 2));
+	}
+
+	thread _thread0(threadProcess, this, rt[0]);
+	_thread0.join();
+
+	auto end = system_clock::now();
+	auto millisec = duration_cast<milliseconds>(end - start);
+	cout << millisec.count() << endl;
+}
+
+int CgPrjDlg::processImg(CRect rect)
+{
+	CProcess process;
+
+	int nRet = process.getStarInfo(&m_pDlgImage->m_Image, 0, rect);
+
+	return nRet;
 }
